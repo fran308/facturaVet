@@ -14,7 +14,8 @@ from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_fo
 def generate_pdf(invoice_data):
     """
     Genera PDF profesional usando datos de empresa desde st.secrets
-    e incorpora requerimientos fiscales Verifactu.
+    e incorpora requerimientos fiscales Verifactu. Control de estilos
+    e identidades visuales manejados 100% de forma nativa.
     """
     
     # Cargar datos de empresa desde secrets
@@ -26,10 +27,10 @@ def generate_pdf(invoice_data):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        topMargin=2*cm,
-        bottomMargin=2*cm,
-        leftMargin=2*cm,
-        rightMargin=2*cm
+        topMargin=1.8*cm,
+        bottomMargin=1.8*cm,
+        leftMargin=1.8*cm,
+        rightMargin=1.8*cm
     )
     
     styles = getSampleStyleSheet()
@@ -42,10 +43,10 @@ def generate_pdf(invoice_data):
     styles.add(ParagraphStyle(
         name='CompanyName',
         parent=styles['Heading1'],
-        fontSize=16,
+        fontSize=18,
         textColor=colors.HexColor(INVOICE_STYLES["primary_color"]),
         alignment=TA_CENTER,
-        spaceAfter=0
+        spaceAfter=2
     ))
     
     styles.add(ParagraphStyle(
@@ -54,15 +55,7 @@ def generate_pdf(invoice_data):
         fontSize=10,
         textColor=colors.HexColor(INVOICE_STYLES["muted_color"]),
         alignment=TA_CENTER,
-        spaceAfter=12
-    ))
-    
-    styles.add(ParagraphStyle(
-        name='InvoiceTitle',
-        parent=styles['Heading2'],
-        fontSize=14,
-        textColor=colors.HexColor(INVOICE_STYLES["text_color"]),
-        alignment=TA_RIGHT
+        spaceAfter=15
     ))
     
     styles.add(ParagraphStyle(
@@ -75,18 +68,11 @@ def generate_pdf(invoice_data):
     ))
     
     styles.add(ParagraphStyle(
-        name='Label',
-        parent=styles['Normal'],
-        fontSize=9,
-        textColor=colors.HexColor(INVOICE_STYLES["muted_color"]),
-        fontName='Helvetica-Bold'
-    ))
-    
-    styles.add(ParagraphStyle(
         name='Value',
         parent=styles['Normal'],
         fontSize=9,
-        textColor=colors.HexColor(INVOICE_STYLES["text_color"])
+        textColor=colors.HexColor(INVOICE_STYLES["text_color"]),
+        leading=13
     ))
     
     styles.add(ParagraphStyle(
@@ -103,7 +89,8 @@ def generate_pdf(invoice_data):
         fontSize=8,
         textColor=colors.HexColor(INVOICE_STYLES["text_color"]),
         fontName='Helvetica-Bold',
-        alignment=TA_LEFT
+        alignment=TA_LEFT,
+        leading=11
     ))
     
     # =========================================================
@@ -112,7 +99,7 @@ def generate_pdf(invoice_data):
     
     story.append(Paragraph(company_data["trading_name"], styles['CompanyName']))
     story.append(Paragraph(company_data["specialty"], styles['Specialty']))
-    story.append(Spacer(1, 0.5*cm))
+    story.append(Spacer(1, 0.4*cm))
     
     # =========================================================
     # NÚMERO DE FACTURA Y FECHAS
@@ -122,41 +109,58 @@ def generate_pdf(invoice_data):
     is_simplified = invoice_type == "B2C • Factura simplificada"
     is_b2b = invoice_type == "B2B • Profesional con IRPF"
 
-    # Determinación legal del título del documento
-    display_title = "<b>FACTURA SIMPLIFICADA</b>" if is_simplified else "<b>FACTURA COMPLETA</b>"
+    # Determinación del título del documento (Texto limpio sin etiquetas HTML)
+    display_title = "FACTURA SIMPLIFICADA" if is_simplified else "FACTURA COMPLETA"
     
     invoice_header = [
         ["", display_title],
-        ["", f"<b>Nº:</b> {invoice_data['header']['invoice_number']}"],
-        ["", f"<b>Expedición:</b> {invoice_data['header']['invoice_date']}"],
-        ["", f"<b>Operación:</b> {invoice_data['header']['operation_date']}"]
+        ["", f"Nº: {invoice_data['header']['invoice_number']}"],
+        ["", f"Expedición: {invoice_data['header']['invoice_date']}"],
+        ["", f"Operación: {invoice_data['header']['operation_date']}"]
     ]
     
-    header_table = Table(invoice_header, colWidths=[10*cm, 6*cm])
+    # Dimensiones estables para evitar colisiones tipográficas laterales
+    header_table = Table(invoice_header, colWidths=[9.4*cm, 7.0*cm])
     header_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
         ('VALIGN', (1, 0), (1, -1), 'TOP'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-        ('FONTSIZE', (1, 0), (1, -1), 10),
+        
+        # Estilo estructural: Título destacado en negrita nativa sin tags <b>
+        ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (1, 0), (1, 0), 12),
+        ('TEXTCOLOR', (1, 0), (1, 0), colors.HexColor(INVOICE_STYLES["primary_color"])),
+        
+        # Fechas secundarias con peso regular
+        ('FONTNAME', (1, 1), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (1, 1), (1, -1), 9),
+        
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(header_table)
-    story.append(Spacer(1, 0.5*cm))
+    story.append(Spacer(1, 0.6*cm))
     
     # =========================================================
-    # CLIENTE Y EMISOR (CON LOGICA DE PRIVACIDAD SIMPLIFICADA)
+    # CLIENTE Y EMISOR (LÓGICA SEPARADA SIN TAGS DE FORMATO)
     # =========================================================
     
     client = invoice_data["client"]
     client_text = []
 
+    has_client_details = client.get('name', '').strip() != "" or client.get('nif', '').strip() != ""
+
     if is_simplified:
-        # En factura simplificada pura no mostramos datos de identificación de cliente por defecto
-        client_text.append("<i>Factura simplificada al portador</i>")
+        if has_client_details:
+            client_text.append("Identificación del Destinatario:\n")
+            client_text.append(f"{client.get('name', '')}\n")
+            if client.get('nif', ''):
+                client_text.append(f"NIF/CIF: {client.get('nif', '')}\n")
+        else:
+            client_text.append("Factura simplificada al portador")
     else:
-        # Facturas Completas o B2B muestran obligatoriamente al cliente receptor
-        client_text.append(f"<b>Receptor / Cliente:</b><br/>")
-        client_text.append(f"{client.get('name', '')}<br/>")
-        client_text.append(f"NIF/CIF: {client.get('nif', '')}<br/>")
+        client_text.append("Receptor / Cliente:\n")
+        client_text.append(f"{client.get('name', '')}\n")
+        client_text.append(f"NIF/CIF: {client.get('nif', '')}\n")
         
         client_address = client.get('full_address', '')
         if not client_address:
@@ -173,46 +177,46 @@ def generate_pdf(invoice_data):
             client_address = ", ".join(parts)
         
         if client_address:
-            client_text.append(f"{client_address}<br/>")
+            client_text.append(f"{client_address}\n")
     
-    # Datos obligatorios del emisor fiscal
+    # Datos fijos del profesional emisor
     issuer_text = [
-        f"<b>Emisor / Profesional:</b><br/>",
-        f"{company_data['legal_name']}<br/>",
-        f"NIF: {company_data['nif']}<br/>",
-        f"{company_data['address']}<br/>",
+        "Emisor / Profesional:\n",
+        f"{company_data['legal_name']}\n",
+        f"NIF: {company_data['nif']}\n",
+        f"{company_data['address']}\n",
         f"{company_data['phone']} | {company_data['email']}"
     ]
     
-    parties_data = [
-        [Paragraph("".join(client_text), styles['Value']),
-         Paragraph("".join(issuer_text), styles['Value'])]
-    ]
+    # Convertimos los saltos de línea planos en formato párrafo para ReportLab
+    client_paragraph = Paragraph("".join(client_text).replace('\n', '<br/>'), styles['Value'])
+    issuer_paragraph = Paragraph("".join(issuer_text).replace('\n', '<br/>'), styles['Value'])
     
-    parties_table = Table(parties_data, colWidths=[8*cm, 8*cm])
+    parties_data = [[client_paragraph, issuer_paragraph]]
+    
+    parties_table = Table(parties_data, colWidths=[8.2*cm, 8.2*cm])
     parties_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('RIGHTPADDING', (0, 0), (0, -1), 15),
     ]))
     story.append(parties_table)
     story.append(Spacer(1, 0.8*cm))
     
     # =========================================================
-    # TABLA DE CONCEPTOS (ESTRUCTURA DE 5 COLUMNAS UNIFICADA)
+    # TABLA DE CONCEPTOS (5 COLUMNAS - FORMATO DE MONEDA ALINEADO)
     # =========================================================
     
-    # Distribución equilibrada para abarcar los 16cm útiles de la página A4
-    col_widths = [5.5*cm, 2.7*cm, 2.0*cm, 2.7*cm, 3.1*cm]
-    
+    col_widths = [5.6*cm, 2.7*cm, 2.0*cm, 2.7*cm, 3.4*cm]
     table_data = [["Concepto", "Base Imponible", "Tipo IVA", "Cuota IVA", "Importe Total"]]
     
     for item in invoice_data["items"]:
         table_data.append([
             Paragraph(item["name"], styles['Value']),
-            f"€{item['net_price']:.2f}",
+            f"{item['net_price']:.2f} €",
             item["vat"],
-            f"€{item['vat_amount']:.2f}", # Mostramos el desglose unitario
-            f"€{item['gross_price']:.2f}"
+            f"{item['vat_amount']:.2f} €",
+            f"{item['gross_price']:.2f} €"
         ])
     
     table = Table(table_data, colWidths=col_widths, repeatRows=1)
@@ -230,7 +234,7 @@ def generate_pdf(invoice_data):
     ]))
     
     story.append(table)
-    story.append(Spacer(1, 0.5*cm))
+    story.append(Spacer(1, 0.6*cm))
     
     # =========================================================
     # TOTALES
@@ -240,23 +244,23 @@ def generate_pdf(invoice_data):
     
     if is_b2b:
         totals_data = [
-            ["Base imponible:", f"€{totals['total_net']:.2f}"],
-            [f"IVA (21%):", f"€{totals['total_vat_21']:.2f}"],
-            [f"IRPF (15%):", f"-€{totals['irpf_total']:.2f}"],
+            ["Base imponible:", f"{totals['total_net']:.2f} €"],
+            ["IVA (21%):", f"{totals['total_vat_21']:.2f} €"],
+            ["IRPF (15%):", f"-{totals['irpf_total']:.2f} €"],
             ["", ""],
-            ["TOTAL A PAGAR:", f"€{totals['final_payable']:.2f}"]
+            ["TOTAL A PAGAR:", f"{totals['final_payable']:.2f} €"]
         ]
     else:
         totals_data = [
-            ["Base imponible:", f"€{totals['total_net']:.2f}"],
-            [f"IVA (21%):", f"€{totals['total_vat_21']:.2f}"],
+            ["Base imponible:", f"{totals['total_net']:.2f} €"],
+            ["IVA (21%):", f"{totals['total_vat_21']:.2f} €"],
         ]
         if totals['total_vat_10'] > 0:
-            totals_data.insert(2, [f"IVA (10%):", f"€{totals['total_vat_10']:.2f}"])
+            totals_data.insert(2, ["IVA (10%):", f"{totals['total_vat_10']:.2f} €"])
         totals_data.append(["", ""])
-        totals_data.append(["TOTAL FACTURA:", f"€{totals['total_gross']:.2f}"])
+        totals_data.append(["TOTAL FACTURA:", f"{totals['total_gross']:.2f} €"])
     
-    totals_table = Table(totals_data, colWidths=[11.5*cm, 4.5*cm])
+    totals_table = Table(totals_data, colWidths=[11.7*cm, 4.7*cm])
     totals_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
         ('FONTNAME', (0, -1), (1, -1), 'Helvetica-Bold'),
@@ -274,25 +278,21 @@ def generate_pdf(invoice_data):
     # REQUERIMIENTOS VERIFACTU & CODIGO QR
     # =========================================================
     
-    # Texto legal explícito de Verifactu obligatorio en el documento impreso
-    verifactu_text = (
+    verifactu_html = (
         "<b>Factura verificable en la sede electrónica de la AEAT</b><br/>"
         "<font color='#555555' size='7'>Este documento técnico cumple con la normativa de registro "
         "e integridad Verifactu de la Agencia Tributaria. Una vez liquidada, su huella digital hash "
         "y estado de encadenamiento pueden validarse de forma pública.</font>"
     )
 
-    # Bloque de reserva estructural para el código QR técnico (3x3 cm reglamentario)
     qr_placeholder_data = [
-        [Paragraph(verifactu_text, styles['VerifactuNotice']), ""]
+        [Paragraph(verifactu_html, styles['VerifactuNotice']), ""]
     ]
     
-    # Cuando implementes el endpoint final, reemplazarás el string vacío "" por la imagen del QR generado
-    verifactu_table = Table(qr_placeholder_data, colWidths=[12.5*cm, 3.5*cm])
+    verifactu_table = Table(qr_placeholder_data, colWidths=[12.9*cm, 3.5*cm])
     verifactu_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-        ('LINEBELOW', (1, 0), (1, 0), 0.5, colors.transparent), # Cambiar a gris si deseas ver el borde del cuadro QR
     ]))
     
     story.append(verifactu_table)
