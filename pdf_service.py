@@ -7,6 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 import io
 import streamlit as st
+from datetime import datetime
 
 from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_footer_text
 
@@ -14,8 +15,9 @@ from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_fo
 def generate_pdf(invoice_data):
     """
     Genera PDF profesional usando datos de empresa desde st.secrets
-    e incorpora requerimientos fiscales Verifactu (bloque técnico comentado provisionalmente).
-    Control de estilos, visibilidad de fechas y datos de cliente manejados 100% de forma nativa.
+    e incorpora requerimientos fiscales Verifactu (bloque técnico comentado).
+    Control de estilos, formato de fecha (dd/mm/yyyy), visibilidad de fechas 
+    y datos de cliente manejados 100% de forma nativa.
     """
     
     # Cargar datos de empresa desde secrets
@@ -40,11 +42,12 @@ def generate_pdf(invoice_data):
     # ESTILOS PERSONALIZADOS
     # =========================================================
     
+    # 💡 OJO VETERINARIO ahora en color negro (#333333) para mejor contraste de marca
     styles.add(ParagraphStyle(
         name='CompanyName',
         parent=styles['Heading1'],
         fontSize=18,
-        textColor=colors.HexColor(INVOICE_STYLES["primary_color"]),
+        textColor=colors.HexColor(INVOICE_STYLES["text_color"]),
         alignment=TA_CENTER,
         spaceAfter=2
     ))
@@ -102,39 +105,53 @@ def generate_pdf(invoice_data):
     story.append(Spacer(1, 0.4*cm))
     
     # =========================================================
-    # NÚMERO DE FACTURA Y FECHAS (LÓGICA DINÁMICA)
+    # NÚMERO DE FACTURA Y FECHAS (FORMATO DD/MM/YYYY)
     # =========================================================
     
     invoice_type = invoice_data["header"]["invoice_type"]
     is_simplified = invoice_type == "B2C • Factura simplificada"
     is_b2b = invoice_type == "B2B • Profesional con IRPF"
 
-    # Determinación del título del documento (Texto limpio sin tags HTML)
+    # Determinación del título del documento
     display_title = "FACTURA SIMPLIFICADA" if is_simplified else "FACTURA COMPLETA"
     
-    # Estructura base obligatoria para ambos tipos
+    # 💡 Conversión segura de formatos de fecha a dd/mm/yyyy
+    def format_to_spanish_date(date_input):
+        if isinstance(date_input, (date, datetime)):
+            return date_input.strftime("%d/%m/%Y")
+        try:
+            # Por si viene como string tipo ISO (yyyy-mm-dd) desde el estado anterior
+            parsed_date = datetime.strptime(str(date_input), "%Y-%m-%d")
+            return parsed_date.strftime("%d/%m/%Y")
+        except ValueError:
+            return str(date_input)
+
+    formatted_expedition = format_to_spanish_date(invoice_data['header']['invoice_date'])
+    
+    # Estructura base de la cabecera
     invoice_header = [
         ["", display_title],
         ["", f"Nº: {invoice_data['header']['invoice_number']}"],
-        ["", f"Expedición: {invoice_data['header']['invoice_date']}"]
+        ["", f"Expedición: {formatted_expedition}"]
     ]
     
-    # Lógica de desacoplamiento: Solo mostramos 'Operación' si NO es simplificada
+    # Solo mostramos 'Operación' formateada si NO es simplificada
     if not is_simplified:
-        invoice_header.append(["", f"Operación: {invoice_data['header']['operation_date']}"])
+        formatted_operation = format_to_spanish_date(invoice_data['header']['operation_date'])
+        invoice_header.append(["", f"Operación: {formatted_operation}"])
     
-    # Dimensiones estables para la cabecera derecha
+    # Tabla de metadatos derecha
     header_table = Table(invoice_header, colWidths=[9.4*cm, 7.0*cm])
     header_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
         ('VALIGN', (1, 0), (1, -1), 'TOP'),
         
-        # Estilo estructural para el título principal
+        # Estilo del título principal
         ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (1, 0), (1, 0), 12),
         ('TEXTCOLOR', (1, 0), (1, 0), colors.HexColor(INVOICE_STYLES["primary_color"])),
         
-        # Fechas secundarias con peso regular
+        # Fechas secundarias
         ('FONTNAME', (1, 1), (1, -1), 'Helvetica'),
         ('FONTSIZE', (1, 1), (1, -1), 9),
         
@@ -145,7 +162,7 @@ def generate_pdf(invoice_data):
     story.append(Spacer(1, 0.6*cm))
     
     # =========================================================
-    # CLIENTE Y EMISOR (LÓGICA SEPARADA SIN TAGS DE FORMATO)
+    # CLIENTE Y EMISOR
     # =========================================================
     
     client = invoice_data["client"]
@@ -192,7 +209,6 @@ def generate_pdf(invoice_data):
         f"{company_data['phone']} | {company_data['email']}"
     ]
     
-    # Convertimos los saltos de línea planos en formato párrafo para ReportLab
     client_paragraph = Paragraph("".join(client_text).replace('\n', '<br/>'), styles['Value'])
     issuer_paragraph = Paragraph("".join(issuer_text).replace('\n', '<br/>'), styles['Value'])
     
@@ -208,7 +224,7 @@ def generate_pdf(invoice_data):
     story.append(Spacer(1, 0.8*cm))
     
     # =========================================================
-    # TABLA DE CONCEPTOS (5 COLUMNAS - FORMATO DE MONEDA ALINEADO)
+    # TABLA DE CONCEPTOS
     # =========================================================
     
     col_widths = [5.6*cm, 2.7*cm, 2.0*cm, 2.7*cm, 3.4*cm]
