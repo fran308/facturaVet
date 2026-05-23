@@ -7,7 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 import io
 import streamlit as st
-from datetime import datetime
+from datetime import date, datetime
 
 from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_footer_text
 
