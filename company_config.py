@@ -41,13 +41,13 @@ def get_company_data_from_secrets():
 
 
 # =========================================================
-# CONFIGURACIÓN DE FORMATO (pública)
+# CONFIGURACIÓN DE FORMATO (OJO VETERINARIO BRANDING)
 # =========================================================
 
-# Estilos de la factura (pueden modificarse sin exponer datos)
+# Estilos de la factura con la paleta de Ojo Veterinario
 INVOICE_STYLES = {
-    "primary_color": "#2E7D32",      # Verde corporativo
-    "secondary_color": "#E8F5E9",    # Verde claro para fondos
+    "primary_color": "#a747a2",      # Magenta/Púrpura corporativo para elementos principales
+    "secondary_color": "#f6ebf5",    # Tono pastel suave derivado para fondos de totales
     "text_color": "#333333",
     "muted_color": "#666666",
     "footer_color": "#888888",
@@ -55,9 +55,9 @@ INVOICE_STYLES = {
 
 # Estructura de la tabla (qué columnas mostrar según tipo)
 TABLE_COLUMNS = {
-    "b2b": ["Concepto", "Cantidad", "Precio", "Dto.", "Total"],
-    "b2c_full": ["Concepto", "Cantidad", "Precio", "Dto.", "Total"],
-    "b2c_simplified": ["Concepto", "Precio sin IVA", "Tipo IVA", "Precio con IVA"]
+    "b2b": ["Concepto", "Base Imponible", "Tipo IVA", "Cuota IVA", "Importe Total"],
+    "b2c_full": ["Concepto", "Base Imponible", "Tipo IVA", "Cuota IVA", "Importe Total"],
+    "b2c_simplified": ["Concepto", "Base Imponible", "Tipo IVA", "Cuota IVA", "Importe Total"]
 }
 
 # Textos del pie de página (plantillas)
@@ -69,7 +69,7 @@ FOOTER_TEMPLATES = {
         Vencimiento en {days} días - Tel: {phone} | E-mail: {email}
     """,
     "b2c_full": """
-        <b>Gracias por su compra</b><br/>
+        <b>Gracias por su confianza</b><br/>
         {trading_name} - {legal_name}<br/>
         Tel: {phone} | {email}
     """,
