@@ -413,10 +413,10 @@ with st.form("add_product", clear_on_submit=True):
 
         item = calculate_invoice_item(
             name=name_input,
-            base_price_gross=base_price,        # Changed from base_price
+            base_price_gross=base_price,
             vat=vat,
             discount_type=discount_type,
-            discount_value_input=discount_value  # Changed from discount_value
+            discount_value_input=discount_value
         )
 
         st.session_state.invoice_items.append(item)
@@ -445,57 +445,37 @@ if st.session_state.invoice_items:
     total_vat = totals["total_vat"]
 
     # -----------------------------------------------------
-    # DISPLAY ITEMS
+    # DISPLAY ITEMS (Clean 4-Column Structured Table Layout)
     # -----------------------------------------------------
+    
+    col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([3, 1.5, 1.0, 1.5, 0.5])
+    with col_h1: st.markdown("**Concepto**")
+    with col_h2: st.markdown("**P. Bruto (Con IVA)**")
+    with col_h3: st.markdown("**IVA**")
+    with col_h4: st.markdown("**P. Neto**")
+    with col_h5: st.write("") 
+    st.write("")
 
-    for idx, item in enumerate(
-        st.session_state.invoice_items,
-        1
-    ):
-
-        col1, col2, col3, col4, col5 = st.columns(
-            [3, 1.2, 1.2, 1.2, 0.6]
-        )
+    for idx, item in enumerate(st.session_state.invoice_items, 1):
+        col1, col2, col3, col4, col5 = st.columns([3, 1.5, 1.0, 1.5, 0.5])
 
         with col1:
-
-            st.write(
-                f"{idx}. {item['name']}"
-            )
+            st.write(f"{idx}. {item['name']}")
 
         with col2:
-
-            st.write(
-                f"€{item['gross_price']:.2f}"
-            )
-
+            st.write(f"€{item['gross_price']:.2f}")
             if item["discount_amount"] > 0:
-
-                st.caption(
-                    f"-€{item['discount_amount']:.2f}"
-                )
+                st.caption(f"Desc: -€{item['discount_amount']:.2f}")
 
         with col3:
-
-            st.write(item["vat"])
+            st.write(f"{item['vat']}")
 
         with col4:
-
-            st.write(
-                f"(net €{item['net_price']:.2f})"
-            )
+            st.write(f"€{item['net_price']:.2f}")
 
         with col5:
-
-            if st.button(
-                "❌",
-                key=f"delete_{idx}"
-            ):
-
-                st.session_state.invoice_items.pop(
-                    idx - 1
-                )
-
+            if st.button("❌", key=f"delete_{idx}"):
+                st.session_state.invoice_items.pop(idx - 1)
                 st.rerun()
 
     # =====================================================
