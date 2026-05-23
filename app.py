@@ -445,33 +445,35 @@ if st.session_state.invoice_items:
     total_vat = totals["total_vat"]
 
     # -----------------------------------------------------
-    # DISPLAY ITEMS (Clean 4-Column Structured Table Layout)
+    # DISPLAY ITEMS (Fixed Columns showing detailed IVA values)
     # -----------------------------------------------------
     
-    col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([3, 1.5, 1.0, 1.5, 0.5])
+    # Clean Table Headers
+    col_h1, col_h2, col_h3, col_h4, col_h5 = st.columns([3, 1.4, 1.6, 1.4, 0.6])
     with col_h1: st.markdown("**Concepto**")
-    with col_h2: st.markdown("**P. Bruto (Con IVA)**")
-    with col_h3: st.markdown("**IVA**")
-    with col_h4: st.markdown("**P. Neto**")
-    with col_h5: st.write("") 
+    with col_h2: st.markdown("**Base (Neto)**")
+    with col_h3: st.markdown("**Cuota IVA**")
+    with col_h4: st.markdown("**Total (Bruto)**")
+    with col_h5: st.write("") # Delete button space
     st.write("")
 
     for idx, item in enumerate(st.session_state.invoice_items, 1):
-        col1, col2, col3, col4, col5 = st.columns([3, 1.5, 1.0, 1.5, 0.5])
+        col1, col2, col3, col4, col5 = st.columns([3, 1.4, 1.6, 1.4, 0.6])
 
         with col1:
             st.write(f"{idx}. {item['name']}")
 
         with col2:
-            st.write(f"€{item['gross_price']:.2f}")
-            if item["discount_amount"] > 0:
-                st.caption(f"Desc: -€{item['discount_amount']:.2f}")
+            st.write(f"{item['net_price']:.2f} €")
 
         with col3:
-            st.write(f"{item['vat']}")
+            # 💡 Displays both the percentage rate and the exact Euro tax value!
+            st.write(f"{item['vat']} ({item['vat_amount']:.2f} €)")
 
         with col4:
-            st.write(f"€{item['net_price']:.2f}")
+            st.write(f"{item['gross_price']:.2f} €")
+            if item["discount_amount"] > 0:
+                st.caption(f"Desc: -{item['discount_amount']:.2f} €")
 
         with col5:
             if st.button("❌", key=f"delete_{idx}"):
