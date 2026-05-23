@@ -14,8 +14,8 @@ from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_fo
 def generate_pdf(invoice_data):
     """
     Genera PDF profesional usando datos de empresa desde st.secrets
-    e incorpora requerimientos fiscales Verifactu. Control de estilos
-    e identidades visuales manejados 100% de forma nativa.
+    e incorpora requerimientos fiscales Verifactu (bloque técnico comentado provisionalmente).
+    Control de estilos, visibilidad de fechas y datos de cliente manejados 100% de forma nativa.
     """
     
     # Cargar datos de empresa desde secrets
@@ -102,30 +102,34 @@ def generate_pdf(invoice_data):
     story.append(Spacer(1, 0.4*cm))
     
     # =========================================================
-    # NÚMERO DE FACTURA Y FECHAS
+    # NÚMERO DE FACTURA Y FECHAS (LÓGICA DINÁMICA)
     # =========================================================
     
     invoice_type = invoice_data["header"]["invoice_type"]
     is_simplified = invoice_type == "B2C • Factura simplificada"
     is_b2b = invoice_type == "B2B • Profesional con IRPF"
 
-    # Determinación del título del documento (Texto limpio sin etiquetas HTML)
+    # Determinación del título del documento (Texto limpio sin tags HTML)
     display_title = "FACTURA SIMPLIFICADA" if is_simplified else "FACTURA COMPLETA"
     
+    # Estructura base obligatoria para ambos tipos
     invoice_header = [
         ["", display_title],
         ["", f"Nº: {invoice_data['header']['invoice_number']}"],
-        ["", f"Expedición: {invoice_data['header']['invoice_date']}"],
-        ["", f"Operación: {invoice_data['header']['operation_date']}"]
+        ["", f"Expedición: {invoice_data['header']['invoice_date']}"]
     ]
     
-    # Dimensiones estables para evitar colisiones tipográficas laterales
+    # Lógica de desacoplamiento: Solo mostramos 'Operación' si NO es simplificada
+    if not is_simplified:
+        invoice_header.append(["", f"Operación: {invoice_data['header']['operation_date']}"])
+    
+    # Dimensiones estables para la cabecera derecha
     header_table = Table(invoice_header, colWidths=[9.4*cm, 7.0*cm])
     header_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
         ('VALIGN', (1, 0), (1, -1), 'TOP'),
         
-        # Estilo estructural: Título destacado en negrita nativa sin tags <b>
+        # Estilo estructural para el título principal
         ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (1, 0), (1, 0), 12),
         ('TEXTCOLOR', (1, 0), (1, 0), colors.HexColor(INVOICE_STYLES["primary_color"])),
@@ -179,7 +183,7 @@ def generate_pdf(invoice_data):
         if client_address:
             client_text.append(f"{client_address}\n")
     
-    # Datos fijos del profesional emisor
+    # Datos fijos del emisor profesional
     issuer_text = [
         "Emisor / Profesional:\n",
         f"{company_data['legal_name']}\n",
@@ -275,28 +279,28 @@ def generate_pdf(invoice_data):
     story.append(Spacer(1, 0.8*cm))
     
     # =========================================================
-    # REQUERIMIENTOS VERIFACTU & CODIGO QR
+    # REQUERIMIENTOS VERIFACTU & CODIGO QR (COMENTADO PROVISIONALMENTE)
     # =========================================================
-    
-    verifactu_html = (
-        "<b>Factura verificable en la sede electrónica de la AEAT</b><br/>"
-        "<font color='#555555' size='7'>Este documento técnico cumple con la normativa de registro "
-        "e integridad Verifactu de la Agencia Tributaria. Una vez liquidada, su huella digital hash "
-        "y estado de encadenamiento pueden validarse de forma pública.</font>"
-    )
-
-    qr_placeholder_data = [
-        [Paragraph(verifactu_html, styles['VerifactuNotice']), ""]
-    ]
-    
-    verifactu_table = Table(qr_placeholder_data, colWidths=[12.9*cm, 3.5*cm])
-    verifactu_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-    ]))
-    
-    story.append(verifactu_table)
-    story.append(Spacer(1, 0.6*cm))
+    # 
+    # verifactu_html = (
+    #     "<b>Factura verificable en la sede electrónica de la AEAT</b><br/>"
+    #     "<font color='#555555' size='7'>Este documento técnico cumple con la normativa de registro "
+    #     "e integridad Verifactu de la Agencia Tributaria. Una vez liquidada, su huella digital hash "
+    #     "y estado de encadenamiento pueden validarse de forma pública.</font>"
+    # )
+    #
+    # qr_placeholder_data = [
+    #     [Paragraph(verifactu_html, styles['VerifactuNotice']), ""]
+    # ]
+    # 
+    # verifactu_table = Table(qr_placeholder_data, colWidths=[12.9*cm, 3.5*cm])
+    # verifactu_table.setStyle(TableStyle([
+    #     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    #     ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    # ]))
+    # 
+    # story.append(verifactu_table)
+    # story.append(Spacer(1, 0.6*cm))
     
     # =========================================================
     # PIE DE PÁGINA
