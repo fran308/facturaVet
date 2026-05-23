@@ -406,17 +406,17 @@ with st.form("add_product", clear_on_submit=True):
     )
 
     # -----------------------------------------------------
-    # PROCESS ITEM
+    # PROCESS ITEM (FIXED PARAMETER NAMES)
     # -----------------------------------------------------
 
     if submitted and name_input.strip() != "":
 
         item = calculate_invoice_item(
             name=name_input,
-            base_price_gross=base_price,
+            base_price_gross=base_price,        # Changed from base_price
             vat=vat,
             discount_type=discount_type,
-            discount_value=discount_value
+            discount_value_input=discount_value  # Changed from discount_value
         )
 
         st.session_state.invoice_items.append(item)
@@ -621,10 +621,9 @@ if st.session_state.invoice_items:
     col1, col2, col3 = st.columns(3)
     
     # -----------------------------------------------------
-    # GENERATE STRIPE LINK (solo si hay PDF generado o si quieres mantenerlo)
+    # GENERATE STRIPE LINK
     # -----------------------------------------------------
     with col1:
-        # Opcional: solo mostrar si se ha generado PDF
         if st.session_state.invoice_status != "DRAFT":
             if st.button("🚀 Generate Stripe link", type="primary", use_container_width=True):
                 validation_error = validate_invoice(
@@ -714,7 +713,6 @@ if st.session_state.invoice_items:
     # -----------------------------------------------------
     with col2:
         if st.button("🔄 Start new invoice", use_container_width=True):
-            # Limpiar también el PDF generado
             st.session_state.invoice_items = []
             st.session_state.generated_pdf = None
             st.session_state.invoice_status = "DRAFT"
