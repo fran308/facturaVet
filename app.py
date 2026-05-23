@@ -413,7 +413,7 @@ with st.form("add_product", clear_on_submit=True):
 
         item = calculate_invoice_item(
             name=name_input,
-            base_price=base_price,
+            base_price_gross=base_price,
             vat=vat,
             discount_type=discount_type,
             discount_value=discount_value
