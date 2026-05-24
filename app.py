@@ -5,22 +5,22 @@ from datetime import date, datetime, timedelta
 
 import streamlit_authenticator as stauth
 
-from styles import load_css
-from session_state import initialize_session_state
+from ui_styles.styles import load_css
+from config.session_state import initialize_session_state
 
-from calculations import (
+from utils.calculations import (
     calculate_invoice_item,
     calculate_totals,
     calculate_irpf
 )
 
-from stripe_service import (
+from integrations.stripe_service import (
     build_line_items,
     build_metadata,
     create_checkout_session
 )
 
-from invoice_service import (
+from utils.invoice_service import (
     get_invoice_type_flags,
     validate_invoice,
     get_payable_items,
@@ -28,7 +28,7 @@ from invoice_service import (
     build_total_caption
 )
 
-from invoice_builder import (
+from .invoice_engine.invoice_builder import (
     build_invoice_object
 )
 
