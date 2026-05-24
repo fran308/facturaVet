@@ -28,7 +28,7 @@ from invoice_engine.invoice_service import (
     build_total_caption
 )
 
-from .invoice_engine.invoice_builder import (
+from invoice_engine.invoice_builder import (
     build_invoice_object
 )
 
