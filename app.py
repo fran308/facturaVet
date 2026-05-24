@@ -314,45 +314,55 @@ with st.sidebar:
 st.subheader("➕ Add service or product")
 
 # =========================================================
-# OPTIONAL DISCOUNT
+# INTERFAZ DE DESCUENTO OPTIMIZADA (SIN PESTAÑAS)
 # =========================================================
 
-with st.expander("💸 Optional discount"):
+aplicar_descuento = st.checkbox(
+    "➕ Añadir descuento a este artículo", 
+    value=False,
+    help="Active esta casilla si desea aplicar una rebaja o descuento en este concepto.",
+    key=f"aplicar_descuento_check_{st.session_state.discount_key}"
+)
 
-    discount_type = st.selectbox(
-        "Discount type",
-        [
-            "No discount",
-            "Percentage (%)",
-            "Fixed amount (€)"
-        ],
-        key=f"discount_type_{st.session_state.discount_key}"
-    )
+# Inicialización por defecto (Protección activa de cobros)
+discount_type = "No discount"
+discount_value = 0.0
 
-    if discount_type == "Percentage (%)":
-
-        discount_value = st.number_input(
-            "Discount %",
-            min_value=0.0,
-            max_value=100.0,
-            step=5.0,
-            format="%.1f",
-            key=f"discount_value_{st.session_state.discount_key}"
+if aplicar_descuento:
+    col_tipo, col_valor = st.columns([2, 3])
+    
+    with col_tipo:
+        # El botón de opción selecciona automáticamente la opción de porcentaje (%) por defecto
+        ui_discount_choice = st.radio(
+            "Tipo de descuento:",
+            ["Percentage (%)", "Fixed amount (€)"],
+            index=0,  # 💡 % siempre por defecto al marcar la casilla
+            horizontal=True,
+            key=f"ui_discount_choice_{st.session_state.discount_key}"
         )
+    
+    with col_valor:
+        if ui_discount_choice == "Percentage (%)":
+            discount_type = "Percentage (%)"
+            discount_value = st.number_input(
+                "Discount %",
+                min_value=0.0,
+                max_value=100.0,
+                step=5.0,
+                format="%.1f",
+                key=f"discount_value_pct_{st.session_state.discount_key}"
+            )
+        else:
+            discount_type = "Fixed amount (€)"
+            discount_value = st.number_input(
+                "Discount amount (€)",
+                min_value=0.0,
+                step=1.0,
+                format="%.2f",
+                key=f"discount_value_fijo_{st.session_state.discount_key}"
+            )
 
-    elif discount_type == "Fixed amount (€)":
-
-        discount_value = st.number_input(
-            "Discount amount (€)",
-            min_value=0.0,
-            step=1.0,
-            format="%.2f",
-            key=f"discount_value_{st.session_state.discount_key}"
-        )
-
-    else:
-
-        discount_value = 0.0
+st.write("") # Margen de separación limpio con el formulario del artículo
 
 # =========================================================
 # PRODUCT FORM
@@ -400,10 +410,10 @@ with st.form("add_product", clear_on_submit=True):
                 horizontal=True
             )
 
-    submitted = st.form_submit_button(
-        "Add to invoice",
-        use_container_width=True
-    )
+        submitted = st.form_submit_button(
+            "Add to invoice",
+            use_container_width=True
+        )
 
     # -----------------------------------------------------
     # PROCESS ITEM (FIXED PARAMETER NAMES)
