@@ -5,7 +5,7 @@ from invoice_service import (
 )
 
 # Importar la función para dirección completa
-from client_fields import get_full_address
+from config.client_fields import get_full_address
 
 
 def build_invoice_object(
