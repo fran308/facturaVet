@@ -49,7 +49,7 @@ def validate_invoice(
     # CLIENT DETAILS
     # -----------------------------------------------------
     if requires_client_details:
-        from client_fields import validate_client
+        from config.client_fields import validate_client
         error = validate_client(client_data or {})
         if error:
             return error
