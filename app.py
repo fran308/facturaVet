@@ -548,9 +548,9 @@ if st.session_state.invoice_items:
     
     with col_pdf1:
         if st.button("📄 Generar PDF", type="primary", use_container_width=True):
-            from pdf_service import generate_pdf
-            from invoice_service import validate_invoice
-            from client_fields import validate_client
+            from inovice_engine.pdf_service import generate_pdf
+            from invoice_engine.invoice_service import validate_invoice
+            from config.client_fields import validate_client
             
             # Validar datos obligatorios
             error = validate_invoice(
