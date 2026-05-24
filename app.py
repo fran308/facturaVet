@@ -243,7 +243,7 @@ with st.sidebar:
         st.divider()
         st.subheader("👤 Datos del cliente")
         
-        from client_fields import CLIENT_FIELDS, get_fields_by_section, get_full_address, validate_client
+        from config.client_fields import CLIENT_FIELDS, get_fields_by_section, get_full_address, validate_client
         
         # Opción: mostrar campos por secciones
         sections = ["basic", "address", "contact", "other"]
