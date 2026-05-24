@@ -20,7 +20,7 @@ from integrations.stripe_service import (
     create_checkout_session
 )
 
-from utils.invoice_service import (
+from invoice_engine.invoice_service import (
     get_invoice_type_flags,
     validate_invoice,
     get_payable_items,
