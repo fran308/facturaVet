@@ -1,5 +1,5 @@
 # invoice_builder.py
-from invoice_service import (
+from invoice_engine.invoice_service import (
     get_initial_invoice_status,
     requires_verifactu_submission
 )
