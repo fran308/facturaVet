@@ -9,7 +9,7 @@ import io
 import streamlit as st
 from datetime import date, datetime
 
-from company_config import get_company_data_from_secrets, INVOICE_STYLES, get_footer_text
+from config.company_config import get_company_data_from_secrets, INVOICE_STYLES, get_footer_text
 
 
 def generate_pdf(invoice_data):
