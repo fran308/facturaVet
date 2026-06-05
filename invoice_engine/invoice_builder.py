@@ -1,4 +1,4 @@
-# invoice_builder.py
+# invoice_engine/invoice_builder.py
 from invoice_engine.invoice_service import (
     get_initial_invoice_status,
     requires_verifactu_submission
