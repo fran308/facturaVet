@@ -1,4 +1,4 @@
-# helpers.py
+# utils/helpers.py
 
 def calculate_net(gross_price, vat_percentage):
 
