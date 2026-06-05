@@ -1,4 +1,4 @@
-# styles.py
+# ui_styles/styles.py
 
 import streamlit as st
 
