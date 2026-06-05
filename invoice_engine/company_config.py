@@ -1,4 +1,4 @@
-# company_config.py
+# invoice_engine/company_config.py
 """
 CONFIGURACIÓN DE FORMATO DE FACTURA
 ====================================
