@@ -1,3 +1,5 @@
+#app.py (entry point)
+
 import streamlit as st
 import stripe
 
