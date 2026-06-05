@@ -1,4 +1,4 @@
-# client_fields.py
+# config/client_fields.py
 """
 Configuración central de los campos del cliente.
 MODIFICA SOLO ESTE ARCHIVO para cambiar los campos del cliente.
