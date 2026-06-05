@@ -1,3 +1,5 @@
+#utils/calculations.py
+
 from decimal import Decimal, ROUND_HALF_UP
 
 # Constantes Decimal para evitar imprecisiones
