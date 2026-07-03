@@ -177,7 +177,7 @@ def generate_pdf(invoice_data):
             if client.get('nif', ''):
                 client_text.append(f"NIF/CIF: {client.get('nif', '')}\n")
         else:
-            client_text.append("Factura simplificada al portador")
+            client_text.append("Factura simplificada")
     else:
         client_text.append("Receptor / Cliente:\n")
         client_text.append(f"{client.get('name', '')}\n")
